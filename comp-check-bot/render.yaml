@@ -1,0 +1,48 @@
+services:
+  # ── Backend ────────────────────────────────────────────────────────────────
+  - type: web
+    name: comp-check-bot-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DB_USER_NEON
+        sync: false
+      - key: DB_PW_NEON
+        sync: false
+      - key: DB_NEON_HOST
+        sync: false
+      - key: DB_NEON_NAME
+        sync: false
+      - key: MILVUS_URI
+        sync: false
+      - key: MILVUS_API_KEY
+        sync: false
+      - key: HF_TOKEN
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: TOP_K
+        value: "5"
+
+  # ── Frontend ───────────────────────────────────────────────────────────────
+  - type: web
+    name: comp-check-bot-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
