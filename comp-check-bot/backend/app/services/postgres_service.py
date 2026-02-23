@@ -7,6 +7,7 @@ dynamic filter-based contract querying.
 from __future__ import annotations
 
 import logging
+import traceback
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -17,22 +18,31 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from app.config import get_settings
 
 logger = logging.getLogger(__name__)
-
 settings = get_settings()
+
 
 # ── Engine (singleton) ────────────────────────────────────────────────────────
 def _build_engine():
+    db_url = settings.DATABASE_URL
+    # Log a redacted version to confirm credentials are loaded
+    safe_url = db_url.replace(settings.DB_PW_NEON, "***") if settings.DB_PW_NEON else db_url
     logger.info("🔌 Building Neon Postgres engine …")
-    engine = create_engine(
-        settings.DATABASE_URL,
-        pool_size=5,
-        max_overflow=10,
-        pool_pre_ping=True,       # keeps connections alive across sleeps
-        pool_recycle=300,
-        connect_args={"connect_timeout": 10},
-    )
-    logger.info("✅ Postgres engine ready")
-    return engine
+    logger.info("   DB URL (redacted): %s", safe_url)
+
+    try:
+        engine = create_engine(
+            db_url,
+            pool_size=5,
+            max_overflow=10,
+            pool_pre_ping=True,
+            pool_recycle=300,
+            connect_args={"connect_timeout": 15},
+        )
+        logger.info("✅ Postgres engine created")
+        return engine
+    except Exception as exc:
+        logger.critical("💥 Failed to create Postgres engine: %s\n%s", exc, traceback.format_exc())
+        raise
 
 
 engine = _build_engine()
@@ -45,9 +55,16 @@ engine = _build_engine()
     reraise=True,
 )
 def _execute(query_str: str, params: dict) -> list:
-    with engine.connect() as conn:
-        result = conn.execute(text(query_str), params)
-        return result.fetchall()
+    logger.debug("   SQL: %s | params_keys=%s", query_str.strip()[:200], list(params.keys()))
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text(query_str), params)
+            rows = result.fetchall()
+            logger.debug("   SQL returned %d row(s)", len(rows))
+            return rows
+    except Exception as exc:
+        logger.error("❌ SQL execution failed: %s\n%s", exc, traceback.format_exc())
+        raise
 
 
 # ── Filter extraction → SQL ───────────────────────────────────────────────────
@@ -56,6 +73,7 @@ def get_contract_ids_by_filters(filters: dict) -> list[int]:
     Translate LLM-extracted filter dict into a SQL WHERE clause and return
     matching contract IDs.
     """
+    logger.info("📋 Building SQL filter query | filters=%s", filters)
     base_query = "SELECT contract_id FROM contracts WHERE 1=1"
     params: dict[str, Any] = {}
 
@@ -114,24 +132,30 @@ def get_contract_ids_by_filters(filters: dict) -> list[int]:
         base_query += " AND contract_date >= :date_threshold"
         params["date_threshold"] = cutoff
 
-    logger.info("📋 SQL Filter query: %s | params: %s", base_query, params)
+    logger.info("   Final SQL: %s", base_query)
+    logger.info("   Params: %s", {k: v for k, v in params.items()})
 
     try:
         rows = _execute(base_query, params)
     except OperationalError as exc:
-        logger.error("❌ Postgres query failed: %s", exc)
+        logger.error("❌ Postgres get_contract_ids_by_filters OperationalError: %s\n%s", exc, traceback.format_exc())
+        raise
+    except Exception as exc:
+        logger.error("❌ Postgres get_contract_ids_by_filters unexpected error: %s\n%s", exc, traceback.format_exc())
         raise
 
     contract_ids = [row[0] for row in rows]
-    logger.info("📄 Matching contract IDs: %s", contract_ids)
+    logger.info("✅ Matching contract IDs: %s", contract_ids)
     return contract_ids
 
 
 def get_contracts_by_ids(contract_ids: list[int]) -> list[dict]:
     """Fetch full contract rows for a list of IDs."""
     if not contract_ids:
+        logger.info("ℹ️  get_contracts_by_ids called with empty list → returning []")
         return []
 
+    logger.info("🗃  Fetching full rows for contract_ids=%s …", contract_ids)
     query_str = """
         SELECT contract_id, vendor_name, contract_type, duration_months,
                compliance_score, audit_status, contract_date,
@@ -143,7 +167,10 @@ def get_contracts_by_ids(contract_ids: list[int]) -> list[dict]:
     try:
         rows = _execute(query_str, {"ids": contract_ids})
     except OperationalError as exc:
-        logger.error("❌ Postgres row fetch failed: %s", exc)
+        logger.error("❌ Postgres get_contracts_by_ids OperationalError: %s\n%s", exc, traceback.format_exc())
+        raise
+    except Exception as exc:
+        logger.error("❌ Postgres get_contracts_by_ids unexpected error: %s\n%s", exc, traceback.format_exc())
         raise
 
     result = []
@@ -162,5 +189,5 @@ def get_contracts_by_ids(contract_ids: list[int]) -> list[dict]:
                 "region": row[9],
             }
         )
-    logger.info("🗃  Fetched %d contract rows", len(result))
+    logger.info("✅ Fetched %d contract row(s)", len(result))
     return result
