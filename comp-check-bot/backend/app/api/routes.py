@@ -33,16 +33,24 @@ async def health() -> HealthResponse:
     tags=["rag"],
 )
 async def query_endpoint(body: QueryRequest) -> QueryResponse:
-    """
-    Accepts a natural-language compliance query and returns:
-    - `answer`            – Grounded LLM response
-    - `retrieved_chunks`  – Top-k Milvus chunks with similarity scores
-    - `structured_records`– Matching Postgres contract rows
-    """
+
     logger.info("📥 Received /query request: %s …", body.query[:80])
 
     try:
         result = run_rag_pipeline(body.query)
+
+        if not result:
+            raise HTTPException(
+                status_code=500,
+                detail="RAG pipeline returned empty result"
+            )
+
+        if "retrieved_chunks" not in result:
+            raise HTTPException(
+                status_code=500,
+                detail="Invalid pipeline output format"
+            )
+
     except Exception as exc:
         logger.exception("❌ Pipeline error: %s", exc)
         raise HTTPException(
@@ -50,5 +58,9 @@ async def query_endpoint(body: QueryRequest) -> QueryResponse:
             detail=str(exc),
         ) from exc
 
-    logger.info("📤 Sending response with %d chunks", len(result["retrieved_chunks"]))
+    logger.info(
+        "📤 Sending response with %d chunks",
+        len(result.get("retrieved_chunks", []))
+    )
+
     return QueryResponse(**result)
