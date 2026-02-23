@@ -30,7 +30,7 @@ class Settings(BaseSettings):
 
     # ── Application ──────────────────────────────────────────────────────────
     PORT: int = 8000
-    ALLOWED_ORIGINS: str = "*"          # comma‑separated list or "*"
+    ALLOWED_ORIGINS: str = "https://rag-assignment-1.onrender.com"          # comma‑separated list or "*"
     TOP_K: int = 5
 
     model_config = SettingsConfigDict(
