@@ -2,10 +2,10 @@
 main.py – FastAPI application entry point.
 
 Includes:
-  - Global exception handler (ensures JSON is ALWAYS returned, never empty body)
+  - Global exception handler (ensures JSON is ALWAYS returned)
   - Request/response logging middleware
   - CORS middleware
-  - Root (/) and health (/health) endpoints for deployment readiness
+  - Root (/) and health (/health) endpoints with GET + HEAD support
 """
 
 from __future__ import annotations
@@ -18,14 +18,14 @@ import traceback
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from app.api.routes import router
 from app.config import get_settings
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
-    level=logging.DEBUG,          # DEBUG so every step is visible on Render
+    level=logging.DEBUG,
     format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
@@ -111,25 +111,27 @@ async def log_requests(request: Request, call_next):
     )
     return response
 
-# ── Routes ────────────────────────────────────────────────────────────────────
+# ── API Routes ────────────────────────────────────────────────────────────────
 app.include_router(router, prefix="/api/v1")
 
 # ── Root & Health Endpoints ───────────────────────────────────────────────────
 @app.get("/", tags=["Root"])
+@app.head("/", tags=["Root"])
 async def root():
-    """Root endpoint for quick health check"""
-    return {"status": "ok", "message": "Contract Manager API is running!"}
+    """Root endpoint for GET/HEAD requests (health check)"""
+    return JSONResponse({"status": "ok", "message": "Contract Manager API is running!"})
 
 @app.get("/health", tags=["Health"])
+@app.head("/health", tags=["Health"])
 async def health_check():
-    """Health check endpoint for monitoring"""
-    # Here you can add DB / Milvus ping checks if needed
-    return {
+    """Health check endpoint for GET/HEAD requests"""
+    # Optionally add DB/Milvus checks here
+    return JSONResponse({
         "status": "ok",
         "db_connected": True,
         "milvus_connected": True,
         "message": "All systems operational"
-    }
+    })
 
 # ── Startup / Shutdown Events ─────────────────────────────────────────────────
 @app.on_event("startup")
