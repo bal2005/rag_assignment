@@ -30,7 +30,7 @@ class Settings(BaseSettings):
 
     # ── Application ──────────────────────────────────────────────────────────
     PORT: int = 8000
-    ALLOWED_ORIGINS: str = "https://rag-assignment-1.onrender.com"          # comma‑separated list or "*"
+    ALLOWED_ORIGINS: str = "*"          # comma-separated list or "*"
     TOP_K: int = 5
 
     model_config = SettingsConfigDict(
@@ -41,10 +41,11 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self) -> str:
+        # Note: channel_binding=require is NOT supported by psycopg2 – use sslmode only
         return (
             f"postgresql://{self.DB_USER_NEON}:{self.DB_PW_NEON}"
             f"@{self.DB_NEON_HOST}/{self.DB_NEON_NAME}"
-            f"?sslmode=require&channel_binding=require"
+            f"?sslmode=require"
         )
 
     @property
