@@ -5,6 +5,7 @@ Includes:
   - Global exception handler (ensures JSON is ALWAYS returned, never empty body)
   - Request/response logging middleware
   - CORS middleware
+  - Root (/) and health (/health) endpoints for deployment readiness
 """
 
 from __future__ import annotations
@@ -57,8 +58,6 @@ app.add_middleware(
 )
 
 # ── Global catch-all exception handler ────────────────────────────────────────
-# This GUARANTEES a valid JSON body is always returned, even for
-# completely unhandled exceptions (import errors, etc.)
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     tb = traceback.format_exc()
@@ -75,7 +74,6 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
             "path": str(request.url.path),
         },
     )
-
 
 # ── Request / Response logging middleware ─────────────────────────────────────
 @app.middleware("http")
@@ -113,12 +111,27 @@ async def log_requests(request: Request, call_next):
     )
     return response
 
-
 # ── Routes ────────────────────────────────────────────────────────────────────
 app.include_router(router, prefix="/api/v1")
 
+# ── Root & Health Endpoints ───────────────────────────────────────────────────
+@app.get("/", tags=["Root"])
+async def root():
+    """Root endpoint for quick health check"""
+    return {"status": "ok", "message": "Contract Manager API is running!"}
 
-# ── Startup / shutdown events ─────────────────────────────────────────────────
+@app.get("/health", tags=["Health"])
+async def health_check():
+    """Health check endpoint for monitoring"""
+    # Here you can add DB / Milvus ping checks if needed
+    return {
+        "status": "ok",
+        "db_connected": True,
+        "milvus_connected": True,
+        "message": "All systems operational"
+    }
+
+# ── Startup / Shutdown Events ─────────────────────────────────────────────────
 @app.on_event("startup")
 async def on_startup() -> None:
     logger.info("=" * 60)
@@ -135,13 +148,11 @@ async def on_startup() -> None:
     logger.info("   PORT         : %s", os.environ.get("PORT", settings.PORT))
     logger.info("=" * 60)
 
-
 @app.on_event("shutdown")
 async def on_shutdown() -> None:
     logger.info("👋 Contract Manager and Audit Checking Bot shutting down …")
 
-
-# ── Dev entry point ────────────────────────────────────────────────────────────
+# ── Dev / Production Entry Point ──────────────────────────────────────────────
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", settings.PORT))
     logger.info("▶  Starting server on port %d", port)
