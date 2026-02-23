@@ -104,7 +104,7 @@ Output:
 """
 
 SYSTEM_PROMPT_ANSWER = """
-You are Comp-Check Bot, a professional legal compliance assistant.
+You are Contract Manager and Audit Checking Bot, a professional legal compliance assistant.
 
 IMPORTANT RULES:
 - Answer strictly based on the provided contract data and clauses.

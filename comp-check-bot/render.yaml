@@ -1,7 +1,7 @@
 services:
   # ── Backend ────────────────────────────────────────────────────────────────
   - type: web
-    name: comp-check-bot-backend
+    name: contract-manager-audit-bot-backend
     runtime: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt
@@ -30,7 +30,7 @@ services:
 
   # ── Frontend ───────────────────────────────────────────────────────────────
   - type: web
-    name: comp-check-bot-frontend
+    name: contract-manager-audit-bot-frontend
     runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build

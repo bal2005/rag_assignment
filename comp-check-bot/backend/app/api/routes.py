@@ -1,5 +1,5 @@
 """
-routes.py – FastAPI API routes for the Comp-Check Bot.
+routes.py – FastAPI API routes for the Contract Manager and Audit Checking Bot.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ router = APIRouter()
     tags=["utility"],
 )
 async def health() -> HealthResponse:
-    return HealthResponse(status="ok", message="Comp-Check Bot is running")
+    return HealthResponse(status="ok", message="Contract Manager and Audit Checking Bot is running")
 
 
 @router.post(

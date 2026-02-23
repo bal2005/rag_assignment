@@ -107,7 +107,7 @@ export default function App() {
             <header className="header">
                 <div className="header-brand">
                     <span className="brand-icon" aria-hidden="true">⚖️</span>
-                    <span className="brand-name">Comp-Check Bot</span>
+                    <span className="brand-name">Contract Manager and Audit Checking Bot</span>
                     <span className="brand-badge">RAG · LEGAL</span>
                 </div>
                 <div className="header-status">
@@ -207,7 +207,7 @@ export default function App() {
                 {!loading && !error && !result && (
                     <div className="welcome-card anim-in">
                         <span className="welcome-icon" role="img" aria-label="scales">⚖️</span>
-                        <h2>Legal Contract Compliance Assistant</h2>
+                        <h2>Contract Manager and Audit Checking Bot</h2>
                         <p>
                             Ask natural-language questions about contracts, compliance scores, audit
                             statuses, regions, vendors, and policy clauses — powered by RAG.
@@ -232,7 +232,7 @@ export default function App() {
 
             {/* ── Footer ─────────────────────────────────────────────────────────── */}
             <footer className="footer">
-                Comp-Check Bot · Powered by BGE-M3 · Milvus · Neon Postgres · Groq
+                Contract Manager and Audit Checking Bot · Powered by BGE-M3 · Milvus · Neon Postgres · Groq
             </footer>
         </div>
     )

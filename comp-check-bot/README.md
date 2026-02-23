@@ -1,4 +1,4 @@
-# Comp-Check Bot 🤖⚖️
+# Contract Manager and Audit Checking Bot 🤖⚖️
 
 A **production-ready RAG (Retrieval-Augmented Generation) web application** for legal contract compliance analysis.
 
@@ -19,7 +19,7 @@ A **production-ready RAG (Retrieval-Augmented Generation) web application** for 
 ## Project Structure
 
 ```
-comp-check-bot/
+contract-manager-audit-bot/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                    # FastAPI app entry point
@@ -152,7 +152,7 @@ Visit: http://localhost:5173
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `VITE_API_BASE_URL` | ❌ (prod: ✅) | Backend URL, e.g. `https://comp-check-bot-backend.onrender.com`. Leave empty for local dev (proxy handles it). |
+| `VITE_API_BASE_URL` | ❌ (prod: ✅) | Backend URL, e.g. `https://contract-manager-audit-bot-backend.onrender.com`. Leave empty for local dev (proxy handles it). |
 
 ---
 
@@ -195,7 +195,7 @@ Visit: http://localhost:5173
 ### `GET /api/v1/health`
 
 ```json
-{ "status": "ok", "message": "Comp-Check Bot is running" }
+{ "status": "ok", "message": "Contract Manager and Audit Checking Bot is running" }
 ```
 
 ---
@@ -209,7 +209,7 @@ The `render.yaml` at the root of `comp-check-bot/` defines **two services**:
 ### Step 1: Push to GitHub
 ```bash
 git add .
-git commit -m "feat: initial comp-check-bot project"
+git commit -m "feat: initial contract manager audit bot project"
 git push
 ```
 
@@ -222,7 +222,7 @@ git push
 
 ### Step 3: Set Backend Environment Variables
 
-In the Render dashboard for `comp-check-bot-backend`, add all secrets:
+In the Render dashboard for `contract-manager-audit-bot-backend`, add all secrets:
 
 ```
 DB_USER_NEON      = <your neon user>
@@ -233,16 +233,16 @@ MILVUS_URI        = <your zilliz uri>
 MILVUS_API_KEY    = <your zilliz token>
 HF_TOKEN          = <your huggingface token>
 GROQ_API_KEY      = <your groq key>
-ALLOWED_ORIGINS   = https://comp-check-bot-frontend.onrender.com
+ALLOWED_ORIGINS   = https://contract-manager-audit-bot-frontend.onrender.com
 TOP_K             = 5
 ```
 
 ### Step 4: Set Frontend Environment Variable
 
-In the Render dashboard for `comp-check-bot-frontend`, add:
+In the Render dashboard for `contract-manager-audit-bot-frontend`, add:
 
 ```
-VITE_API_BASE_URL = https://comp-check-bot-backend.onrender.com
+VITE_API_BASE_URL = https://contract-manager-audit-bot-backend.onrender.com
 ```
 
 > **Important:** Set `ALLOWED_ORIGINS` in the backend to the exact URL of your frontend service (no trailing slash).

@@ -26,9 +26,9 @@ settings = get_settings()
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(
-    title="Comp-Check Bot API",
+    title="Contract Manager and Audit Checking Bot API",
     description=(
-        "Production-ready RAG API for legal contract compliance queries. "
+        "RAG API for legal contract compliance queries and audit checking. "
         "Powered by Neon Postgres + Milvus + BGE-M3 + Groq."
     ),
     version="1.0.0",
@@ -54,7 +54,7 @@ app.include_router(router, prefix="/api/v1")
 
 @app.on_event("startup")
 async def on_startup() -> None:
-    logger.info("🚀 Comp-Check Bot starting up …")
+    logger.info("🚀 Contract Manager and Audit Checking Bot starting up …")
     logger.info("   DB host    : %s", settings.DB_NEON_HOST)
     logger.info("   Milvus URI : %s", settings.MILVUS_URI.strip())
     logger.info("   Model      : %s", settings.EMBEDDING_MODEL)
@@ -64,7 +64,7 @@ async def on_startup() -> None:
 
 @app.on_event("shutdown")
 async def on_shutdown() -> None:
-    logger.info("👋 Comp-Check Bot shutting down …")
+    logger.info("👋 Contract Manager and Audit Checking Bot shutting down …")
 
 
 # ── Dev entry point ────────────────────────────────────────────────────────────
